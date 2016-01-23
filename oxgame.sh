@@ -160,6 +160,10 @@ function turn() {
 		do 
 			/bin/echo -n 'row > '
 			read _row
+			if [[ ! $_row =~ ^([0-9]|[1-9][0-9]*)$ ]]; then
+				echo "row must be integer"
+				continue
+			fi
 			if [ $_row -lt 0 -o $_row -ge $SIZE ]; then
 				echo "row must be 0 <= row < ${SIZE}"
 			else
@@ -172,6 +176,10 @@ function turn() {
 		do
 			/bin/echo -n 'col > '
 			read _col
+			if [[ ! $_col =~ ^([0-9]|[1-9][0-9]*)$ ]]; then
+				echo "col must be integer"
+				continue
+			fi
 			if [ $_col -lt 0 -o $_col -ge $SIZE ]; then
 				echo "col must be 0 <= col < ${SIZE}"
 			else
