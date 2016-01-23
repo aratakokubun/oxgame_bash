@@ -137,12 +137,7 @@ function print_board() {
 		local _row="|"
 		for ((y=0;y<$SIZE;y++)) {
 			# print "o" if P1, elif "x" if P2, else " "
-			local _mark=" "
-			if [ $((board${x}${y})) -eq $P1 ]; then
-				_mark="o"
-			elif [ $((board${x}${y})) -eq $P2 ]; then
-				_mark="x"
-			fi
+			local _mark=${MARKS[$((board${x}${y}))]}
 			_row=$_row$_mark"|"
 		}
 		echo $_row
