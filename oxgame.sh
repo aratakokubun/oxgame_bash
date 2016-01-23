@@ -1,193 +1,230 @@
-# !/bin/sh
+# !/bin/bash
 
-# size of the board
-size=3
+# Explanation of usage
+function usage() {
+cat <<_EOT_
+Usage:
+	$0
 
-# players
-none=0
-p1=1
-p2=2
+Description:
+	2 Players ox game
 
-# is board full or not
-is_not_full=0
-is_fill=1
+Options:
+	-h help
+
+_EOT_
+exit 1
+}
+
+# option check
+if [ "$OPTIND" = 1 ]; then
+	while getopts h OPT
+	do
+	case $OPT in
+			h)
+				usage
+				exit 1
+				;;
+			\?)
+				;;
+		esac
+	done
+fi
+
+# CONSTANTS
+# SIZE of the board
+readonly SIZE=3
+# PLAYER IDS
+readonly NONE=0
+readonly P1=1
+readonly P2=2
+readonly PLAYER_NAME=("None" "Player1(o)" "Player2(x)")
+readonly MARKS=(" " "o" "x")
+# BORAD STATE FULL
+readonly IS_NOT_FULL=0
+readonly IS_FULL=1
 
 # Initialize ox board
-for ((x=0; x<$size; x++)) {
-	for ((y=0; y<$size; y++)) {
-		eval ARRAY${x}${y}=$none
+for ((x=0; x<$SIZE; x++)) {
+	for ((y=0; y<$SIZE; y++)) {
+		eval board${x}${y}=$NONE
 	}
 }
 
 # ----------------------------------------------------------------
 # Judge who is the winner
-judge_winner() {
+function judge_winner() {
 	# Horizontal line
-	for ((x=0;x<$size;x++)) {
-		winner=$((ARRAY${x}0))
-		for ((y=1;y<$size;y++)) {
-			if [ $winner -ne $((ARRAY${x}${y})) ]; then
-				winner=$none
+	for ((x=0;x<$SIZE;x++)) {
+		local _winner=$((board${x}0))
+		for ((y=1;y<$SIZE;y++)) {
+			if [ $_winner -ne $((board${x}${y})) ]; then
+				_winner=$NONE
 				break
 			fi
 		}
-		# return winner if winner is not $none player
-		if [ $winner -ne $none ]; then
-			return $winner
+		# return winner if winner is not $NONE player
+		if [ $_winner -ne $NONE ]; then
+			return $_winner
 		fi
 	}
 
 	# Vertical line
-	for ((y=0;y<$size;y++)) {
-		winner=$((ARRAY0${y}))
-		for ((x=1;x<$size;x++)) {
-			if [ $winner -ne $((ARRAY${x}${y})) ]; then
-				winner=$none
+	for ((y=0;y<$SIZE;y++)) {
+		local _winner=$((board0${y}))
+		for ((x=1;x<$SIZE;x++)) {
+			if [ $_winner -ne $((board${x}${y})) ]; then
+				_winner=$NONE
 				break
 			fi
 		}
-		# return winner if winner is not $none player
-		if [ $winner -ne $none ]; then
-			return $winner
+		# return winner if winner is not $NONE player
+		if [ $_winner -ne $NONE ]; then
+			return $_winner
 		fi
 	}
 
 	# Crossing line
-	winner=$((ARRAY00))
-	for ((c=1;c<$size;c++)) {
-		if [ $winner -ne $((ARRAY${c}${c})) ]; then
-			winner=$none
+	local _winner=$((board00))
+	for ((c=1;c<$SIZE;c++)) {
+		if [ $_winner -ne $((board${c}${c})) ]; then
+			_winner=$NONE
 			break
 		fi
 	}
-	if [ $winner -ne $none ]; then
-		return $winner
+	if [ $_winner -ne $NONE ]; then
+		return $_winner
 	fi
-	winner=$((ARRAY$((size-1))0))
-	for ((c=1;c<$size;c++)) {
-		temp=$((size-1-c))
-		if [ $winner -ne $((ARRAY${temp}${c})) ]; then
-			winner=$none
+	
+	_winner=$((board$((SIZE-1))0))
+	for ((c=1;c<$SIZE;c++)) {
+		if [ $_winner -ne $((board$((SIZE-1-c))${c})) ]; then
+			_winner=$NONE
 			break
 		fi
 	}
-	if  [ $winner -ne $none ]; then
-		return $winner
+	if  [ $_winner -ne $NONE ]; then
+		return $_winner
 	fi
 
-	# ret none result
-	return $none
+	# return NONE result if no winner
+	return $NONE
 }
 
 # ----------------------------------------------------------------
-check_full() {
-	for ((x=0; x<$size; x++)) {
-		for ((y=0; y<$size; y++)) {
-			if [ $ARRAY${x}${y} -eq $none ]; then
-				# not full
-				return $is_not_full
+function check_full() {
+	for ((x=0; x<$SIZE; x++)) {
+		for ((y=0; y<$SIZE; y++)) {
+			if [ $board${x}${y} -eq $NONE ]; then
+				return $IS_NOT_FULL
 			fi
 		}
 	}
-# full
-	return $is_full
+	return $IS_FULL
 }
 
 # ----------------------------------------------------------------
-print_board() {
-	line="+"
-	for ((x=0;x<$((size*2-1));x++)) {
-		line=$line"-"
+function print_board() {
+	local _line="+"
+	for ((x=0;x<$((SIZE*2-1));x++)) {
+		_line=$_line"-"
 	}
-	line=$line"+"
-	echo $line
-	for ((x=0;x<$size;x++)) {
-		str="|"
-		for ((y=0;y<$size;y++)) {
-			# print "o" if p1, elif "x" if p2, else " "
-			mark=" "
-			eval p=$((ARRAY${x}${y}))
-			if [ $p -eq $p1 ]; then
-				mark="o"
-			elif [ $p -eq $p2 ]; then
-				mark="x"
+	_line=$_line"+"
+	# Upper line
+	echo $_line
+	# Board cells
+	for ((x=0;x<$SIZE;x++)) {
+		local _row="|"
+		for ((y=0;y<$SIZE;y++)) {
+			# print "o" if P1, elif "x" if P2, else " "
+			local _mark=" "
+			if [ $((board${x}${y})) -eq $P1 ]; then
+				_mark="o"
+			elif [ $((board${x}${y})) -eq $P2 ]; then
+				_mark="x"
 			fi
-			str=$str$mark"|"
+			_row=$_row$_mark"|"
 		}
-		echo $str
+		echo $_row
 	}
-	echo $line
+	# Bottom line
+	echo $_line
+	echo ""
 }
 
 # ----------------------------------------------------------------
-turn() {
-	# print message
-	echo "${1}'s turn"
-	if [ $1 -eq $p1 ]; then
-		echo "Please input pos to place o"
-	else
-		echo "Please input pos to place x"
-	fi
-
+function turn() {
+	# print turn start message
+	echo "${PLAYER_NAME[${1}]}'s turn"
+	echo "Please input pos (x, y) to place ${MARKS[${1}]}"
 	# stdin
 	while :
 	do
-	
+		# row pos
 		while :
 		do 
-			/bin/echo -n 'x > '
-			read x
-			if [ $x -lt 0 -o $x -ge $size ]; then
-				echo "x must be 0 <= x < ${size}"
+			/bin/echo -n 'row > '
+			read _row
+			if [ $_row -lt 0 -o $_row -ge $SIZE ]; then
+				echo "row must be 0 <= row < ${SIZE}"
 			else
 				break
 			fi
 		done
-	
+
+		# col pos
 		while :
 		do
-			/bin/echo -n 'y > '
-			read y
-			if [ $y -lt 0 -o $y -ge $size ]; then
-				echo "y must be 0 <= y < ${size}"
+			/bin/echo -n 'col > '
+			read _col
+			if [ $_col -lt 0 -o $_col -ge $SIZE ]; then
+				echo "col must be 0 <= col < ${SIZE}"
 			else
 				break
 			fi
 		done
-	
-		# check if no mark exist in (x,y)
-		if [ $((ARRAY${x}${y})) -eq $none ]; then
-			eval ARRAY${x}${y}=$1
+
+		# check if no mark exist in (row, col)
+		if [ $((board${_row}${_col})) -eq $NONE ]; then
+			eval board${_row}${_col}=$1
 			break
 		else
-			echo "$((ARRAY${x}${Y})) is already placed at ${x},${y} "
+			echo "$((board${_row}${_col})) is already placed at ${_row},${_col} "
 		fi
 	done
 }
 
+# ----------------------------------------------------------------
+# Main Loop 
 echo "OX Game Start!"
-active_player=$p1
-winner=$none
-board_full=$is_not_full
-while [ $winner -eq $none -a $board_full -eq $is_not_full ]
+active_player=$P1
+winner=$NONE
+board_full=$IS_NOT_FULL
+while [ $winner -eq $NONE -a $board_full -eq $IS_NOT_FULL ]
 do
 	print_board
+	
 	turn $active_player
+	
 	judge_winner
 	winner=$?
+	
 	check_full
 	board_full=$?
+	
 	# switch player
-	if [ $active_player -eq $p1 ];then
-		active_player=$p2
+	if [ $active_player -eq $P1 ];then
+		active_player=$P2
 	else
-		active_player=$p1
+		active_player=$P1
 	fi
-
 done
 
-if [ $winner -ne $none ]; then
+# Show result
+if [ $winner -ne $NONE ]; then
+	echo "*******************"
 	echo "Winner is ${winner}!"
+	echo "*******************"
 else
 	echo "Draw!"
 fi
